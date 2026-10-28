@@ -1,9 +1,10 @@
 from __future__ import annotations
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from typing import Optional
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().with_name(".env"))
 
 SERPAPI_KEY: Optional[str] = os.getenv("SERPAPI_KEY")
 FACE_SIMILARITY_THRESHOLD: float = float(os.getenv("FACE_SIMILARITY_THRESHOLD", "0.65"))

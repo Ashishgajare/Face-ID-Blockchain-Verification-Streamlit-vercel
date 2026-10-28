@@ -9,9 +9,9 @@ cd "C:\Users\Ashish\OneDrive\Desktop\projects\Face ID + Blockchain Verification 
 
 $python = "C:\Users\Ashish\Miniconda3\envs\fbv\python.exe"
 
-3. Install dependencies and run tests:
+3. Install development dependencies and run tests:
 
-& $python -m pip install -r requirements.txt
+& $python -m pip install -r requirements-dev.txt
 & $python -m pytest tests -q
 
 4. Run face verification on the sample image:

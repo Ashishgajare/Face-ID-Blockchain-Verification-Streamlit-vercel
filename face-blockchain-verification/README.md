@@ -235,6 +235,12 @@ source .venv/bin/activate
 pip install -r face-blockchain-verification/requirements.txt
 ```
 
+For local tests, install the development requirements instead:
+
+```bash
+pip install -r face-blockchain-verification/requirements-dev.txt
+```
+
 # 5) Configure `.env`
 
 Create a local `.env` file inside `face-blockchain-verification/` based on `.env.example` and fill in the values for your local environment.
@@ -253,6 +259,27 @@ Optional: run the Streamlit UI:
 ```bash
 streamlit run ui/app.py
 ```
+
+# Streamlit Community Cloud deployment
+
+The Streamlit entry point is `face-blockchain-verification/ui/app.py`. In Streamlit Community Cloud, create an app from this repository and select the `master` branch and that exact main-file path. Choose Python 3.12 in Advanced settings; `face-blockchain-verification/requirements.txt` contains the app dependencies. The repository-root `packages.txt` installs the Linux libraries used by OpenCV.
+
+Add secrets in the Community Cloud app settings, not in Git:
+
+```toml
+SERPAPI_KEY = "your-serpapi-key"
+FACE_SIMILARITY_THRESHOLD = "0.65"
+USE_GPU = "0"
+POLYGON_RPC_URL = "https://rpc-amoy.polygon.technology"
+WALLET_ADDRESS = "your-test-wallet-address"
+PRIVATE_KEY = "your-test-wallet-private-key"
+CONTRACT_ADDRESS = "your-deployed-contract-address"
+CHAIN_ID = "80002"
+```
+
+Only configure blockchain credentials if you intend to submit transactions. Use a test wallet funded only with Polygon Amoy test POL. Community Cloud exposes root-level app secrets as environment variables, which is how `config.py` reads them. The repository-root `.streamlit/config.toml` sets a 10 MB upload limit to help keep image processing within free-host resource limits.
+
+InsightFace downloads its `buffalo_l` model on first use and runs CPU inference. Free-tier memory, CPU, build-time, and storage limits may prevent or slow model initialization and verification. The uploaded source image is sent to `uguu.se` as a temporary public URL and then to SerpApi for reverse search; do not upload images without authorization. The app's local report file is ephemeral on hosted instances; use the JSON download button to save a report.
 
 # 9. Environment Variables
 
@@ -275,7 +302,8 @@ Important:
 
 - `.env` must never be committed to GitHub.
 - Do not paste real private keys or live credentials into source code.
-- The repository includes `.gitignore` entries for `.env`, `.venv`, `output/`, and Python cache files.
+- The repository ignores `.env` files and Streamlit `secrets.toml` files. `.env.example` contains only placeholders and may be committed.
+- Streamlit Community Cloud secrets should be added in the app's settings, not in a repository file.
 
 # 10. Running the Project
 
@@ -487,4 +515,3 @@ streamlit run ui/app.py
 bash
 cd face-blockchain-verification
 pytest -q
-

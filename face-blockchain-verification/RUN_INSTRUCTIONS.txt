@@ -36,9 +36,9 @@ C:\Users\Ashish\Miniconda3\envs\fbv
 
 4. Install or refresh dependencies
 
-Run this once, or whenever requirements.txt changes:
+Run this once, or whenever requirements.txt changes. This includes the test dependency:
 
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
 
 5. Configure the SerpApi key
 
