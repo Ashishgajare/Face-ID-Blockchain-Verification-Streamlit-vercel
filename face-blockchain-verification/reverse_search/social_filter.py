@@ -26,10 +26,30 @@ def _domain_from_url(url: str | None) -> str | None:
     if not url:
         return None
     try:
-        p = urlparse(url)
-        return (p.hostname or "").lower().removeprefix("www.") or None
+        parsed = urlparse(url)
+        return (parsed.hostname or "").lower().removeprefix("www.") or None
     except Exception:
         return None
+
+
+def _platform_for_result(result: SearchResult) -> str:
+    domain = _domain_from_url(result.link)
+    return domain or result.source or "web"
+
+
+def to_candidates(results: Iterable[SearchResult]) -> List[SocialMediaCandidate]:
+    """Convert every parsed search result into a comparable web candidate."""
+    return [
+        SocialMediaCandidate(
+            platform=_platform_for_result(result),
+            url=result.link or "",
+            title=result.title,
+            image_url=result.thumbnail,
+            raw=result.raw,
+        )
+        for result in results
+        if result.link
+    ]
 
 
 def filter_social_results(results: Iterable[SearchResult], domains: Iterable[str] | None = None) -> List[SocialMediaCandidate]:

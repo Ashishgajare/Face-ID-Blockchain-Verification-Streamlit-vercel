@@ -150,6 +150,9 @@ def test_development_write_path_uses_real_client_boundary(monkeypatch, tmp_path:
         def connect(self):
             return self
 
+        def get_balance(self):
+            return 1_000_000_000_000_000_000
+
     class FakeContract:
         def __init__(self, client, address):
             self.client = client
@@ -207,6 +210,52 @@ def test_no_match_never_calls_blockchain(monkeypatch, tmp_path: Path):
     result = pipeline._anchor_verified_match(str(image), best, 0.65)
 
     assert result == {"status": "NOT_ATTEMPTED", "reason": "No verified match"}
+
+
+def test_unfunded_wallet_fails_fast_with_actionable_error(monkeypatch, tmp_path: Path):
+    image = tmp_path / "input.jpg"
+    image.write_bytes(b"test image")
+    candidate = SocialMediaCandidate(
+        platform="Instagram",
+        url="https://instagram.com/p/example",
+        title="example",
+        image_url=None,
+        raw={},
+    )
+    best = pipeline.CandidateVerificationResult(candidate)
+    best.best_similarity = 0.82
+    best.matched = True
+
+    for name, value in {
+        "POLYGON_RPC_URL": "https://rpc.example",
+        "WALLET_ADDRESS": "0x0000000000000000000000000000000000000001",
+        "PRIVATE_KEY": "test-private-key",
+        "CONTRACT_ADDRESS": "0x0000000000000000000000000000000000000002",
+    }.items():
+        monkeypatch.setattr(config, name, value)
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.wallet_address = kwargs["wallet_address"]
+            self.chain_id = kwargs["chain_id"]
+
+        def connect(self):
+            return self
+
+        def get_balance(self):
+            return 0
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("contract write must not be attempted when wallet is unfunded")
+
+    monkeypatch.setattr(pipeline, "PolygonClient", FakeClient)
+    monkeypatch.setattr(pipeline, "FaceVerificationContract", fail_if_called)
+
+    result = pipeline._anchor_verified_match(str(image), best, 0.65)
+
+    assert result["status"] == "FAILED"
+    assert "no pol balance" in result["error"].lower()
+    assert result["transaction_hash"] is None
 
 
 def test_invalid_rpc_connection():

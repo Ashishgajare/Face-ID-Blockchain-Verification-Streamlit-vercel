@@ -116,6 +116,13 @@ def _anchor_verified_match(image_path: str, best: CandidateVerificationResult, t
             private_key=config.PRIVATE_KEY,
             chain_id=config.CHAIN_ID,
         ).connect()
+
+        wallet_balance = client.get_balance()
+        if wallet_balance <= 0:
+            raise RuntimeError(
+                "Polygon wallet has no POL balance. Fund the configured wallet on Polygon Amoy before submitting the record."
+            )
+
         stored = FaceVerificationContract(client, config.CONTRACT_ADDRESS).store_verification(
             record_hash, record.post_url, record.platform
         )
